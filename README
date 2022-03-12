@@ -1,0 +1,27 @@
+Balaci Alexandra Daniela, 323CD
+
+server.c:
+
+Serverul va multiplexa intre comenzile primite la STDIN ("exit"), conexiunile primite pe sochetul UDP (de la care va primi informatiile despre topicuri), si conexiunile primite pe sochetul TCP (pasiv, pe care se va asculta pentru conexiuni de la clienti);
+
+Serverul ruleaza pana cand se primeste comanda "exit" de la stdin, caz in care se inchid toate conexiunile active.
+	
+Daca s-a primit o cerere de conexiune pe sochetul tcp, se accepta cererea si se updateaza multimea de file-descriptori cu noul socket intors. Se verifica daca clientul exista deja in lista de clienti cunoscuti de server. Daca nu exista, clientul se creeaza si serverul afiseaza mesajul de client nou conectat. Daca clientul exista deja si este si online, atunci un alt client cu acelasi nume incearca sa se logheze, lucru care nu este permis. Serverul trimite mesaje de exit catre amandoi clientii si afiseaza la stdout aceasta problema. Daca clientul se reconecteaza, se afiseaza mesaj in consola, si statutul lui se schimba in online. La reconectare, daca clientul are optiunea de store and forward activa, va primi toate mesajele bufferate in timpul in care nu a fost conectat.
+
+Daca s-a primit un mesaj de la unul din clientii UDP, se receptioneaza mesajul si se verifica daca topicul exista deja. Daca nu, se creeaza. Daca da, atunci mesajul va fi convertit conform restrictiilor din enunt si salvat intr-o structura de tip client_tcp pentru a fi trimis mai departe (in situatia in care clientul este online), sau bufferat.
+
+Daca s-a primit un mesaj de la unul din clientii deja conectati, se receptioneaza si se verifica cati bytes s-au primit. Daca s-au primit 0, atunci inseamna ca clientul a inchis conexiunea, iar serverul va printa acest lucru.
+
+Daca s-a primit o cerere de subscribe, se verifica daca topicul exista. Daca nu, este creat acum, iar clientul care a initializat topicul va fi adaugat automat ca si subscriber. Daca topicul exista, clientul este adaugat ca si subscriber, iar variabila subscribed se seteaza pe 1.
+
+Daca s-a peimit o cerere de unsubscribe, variabila subscribe din cadrul structurii clientului va fi setata la 0. 
+
+subscriber.c:
+Se creeaza un socket prin care se va realiza conexiunea cu serverul si se dezactiveaza algoritmul lui Neagle.
+
+Clientul va multiplexa intre comenzile primite de la tastatura si mesajele primite de la server.
+
+Comenzile ce pot fi date la stdin sunt "exit" (va inchide clientul), "subscribe" (va trimite catre server o cerere de abonare la topic), si respectiv "unsubscribe" (va trimite o cerere de dezabonare la topic).
+
+Mesajele primite de la server vor fi primite intr-o structura de tip client_tcp. Se verifica daca serverul a inchis conexiunea, si in caz afirmativ se inchide clientul, sau se afiseaza mesajul primit.
+
